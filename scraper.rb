@@ -37,8 +37,19 @@ class Scraper
 		phone = newpage.css('#ctl00_ContentPlaceHolder1_usrLocalityRegContact_usrPhone_lblPhoneText').text
 		@jurisdiction_name = @jurisdiction_name.downcase.split(" ").map(&:capitalize).join(" ")
 		office = @jurisdiction_name + " Voter Registration Office"
+		
+		if @jurisdiction_name.include?("Charles City County") 
+			first_column = ""
+			second_column = @jurisdiction_name
+		elsif @jurisdiction_name.include?("City") 
+			first_column = @jurisdiction_name
+			second_column = ""
+		else
+			first_column = ""
+			second_column = @jurisdiction_name
+		end
 
-		@rows << [@jurisdiction_name, "VA", office, phone, get_website, match_ocd]
+		@rows << [first_column, second_column, "VA", office, phone, get_website, match_ocd]
 
 	end			
 
@@ -58,7 +69,7 @@ class Scraper
 
 	def match_ocd
 		if @jurisdiction_name.include?("County")
-			name = @jurisdiction_name.rstrip.gsub(/\scounty/i, "").gsub(" ", "_")
+			name = @jurisdiction_name.rstrip.gsub(/\scounty/i, "").gsub(" ", "_").gsub("&", "and")
 			id = @ids.reject do |line|
 					line =~ /place:/
 				end.map do |line|
@@ -80,6 +91,8 @@ class Scraper
 		else 
 			id = ""
 		end
+		# may need to add ocd-division/country:us/state:va/county:king_and_queen 
+
 	end
 	def write_into_CSV_file
 		CSV.open("spreadsheet.csv", "wb") do |csv|
